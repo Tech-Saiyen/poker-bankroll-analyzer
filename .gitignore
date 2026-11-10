@@ -1,0 +1,15 @@
+# .gitignore 
+
+#Hide the secret environment file
+.env
+
+# Hide the Python virtual environment sandbox folder
+.venv/
+env/
+__pycache__/
+*pyc
+
+# Hide local development database files
+instance/
+poker.db
+dev.db
