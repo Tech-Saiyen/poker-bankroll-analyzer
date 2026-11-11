@@ -2,13 +2,16 @@
 from flask import Flask
 from dotenv import load_dotenv
 
-# We load the .env file at the absolute top of the file.
+# I load the .env file at the absolute top of the file.
 # This ensures that when .config imports below, the secret variables are already loaded! Prime the engine with secret keys before any config classes execute. 
 load_dotenv()
 
 from .extensions import db, migrate
 from .routes import poker_blueprint # Grab department blueprint
 from .config import config_by_name 
+
+# 🧠 I pull the models here so Flask-SQLAlchemy detects them on boot!
+from . import models
 
 def create_app(config_name="development"):
     # Create the Flask applicaton instance
