@@ -1,5 +1,6 @@
 # poker_bankroll_anlyzer/models.py
 from datetime import datetime, timezone
+from werkzeug.security import check_password_hash
 from .extensions import db
 
 class User(db.Model):
@@ -21,6 +22,10 @@ class User(db.Model):
         default=lambda: datetime.now(timezone.utc),
         nullable=False
     )
+
+    def check_password(self, candidate_password):
+        """Compares a plain-text login password against the stored cryptographic hash."""
+        return check_password_hash(self.password_hash, candidate_password)
 
     def __repr__(self):
         return f"<User {self.username}>"

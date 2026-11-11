@@ -103,3 +103,35 @@ def register_user():
         "username": new_user.username,
         "created_at": new_user.created_at.isoformat()
     }), 201
+
+# 6. USER LOGIN VERIFICATION ROUTE 
+@poker_blueprint.route("/auth/login", methods=["POST"])
+def login_user():
+    data = request.get_json(silent=True) or {}
+
+    username = data.get("username")
+    password = data.get("password")
+
+    # Simple upfront presense validation
+    if not username or not password:
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "Username and password are required."
+        }), 400
+
+    # Search for the user records by their unique nickname
+    user = User.query.filter_by(username=username.strip()).first()
+
+    # If the user doesn't exist, or the password check fails -> Denied
+    if not user or not user.check_password(password):
+        return jsonify({
+            "code": "UNAUTHORIZED",
+            "message": "Invalid username or password."
+        }), 401
+
+    # Success Path (Credentials are verified!)
+    return jsonify({
+        "status": "authenticated",
+        "message": f"Welcome back, {user.username}!",
+        "user_id": user.id
+    }), 200
