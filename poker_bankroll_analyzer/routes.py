@@ -4,7 +4,7 @@ import jwt
 from flask import Blueprint, current_app, jsonify, request, g
 from werkzeug.security import generate_password_hash
 from .extensions import db
-from .models import User, db
+from .models import User
 from .decorators import require_auth
 
 # Creates the department blueprint
@@ -159,9 +159,12 @@ def get_current_user():
     # Look up the user using the ID save by @require_auth
     user = db.session.get(User, g.current_user_id)
 
-    #Edge case: Valid token, but the user was deleted from the database
+    # Edge case: Valid token, but the user was deleted from the database
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({
+            "code": "NOT_FOUND",
+            "message": "User not found."
+        }), 404
 
     return jsonify({
         "id": user.id,
@@ -170,4 +173,24 @@ def get_current_user():
         "created_at": user.created_at.isoformat() if user.created_at else None
     }), 200
 
-    
+# 8. User Profile Read Route w(Token-isolated)
+@poker_blueprint.route("/users/me", methods=["GET"])
+@require_auth
+def get_user_profile():
+    """Return the safe public profile of the currenty logged-in user."""
+    # Pick the user stricly from the verified JWT token. Never from URL or body.
+    user = db.session.get(User, g.current_user_id)
+
+    if not user:
+        return jsonify({
+            "code": "NOT_FOUND",
+            "message": "User not found."
+        }), 404
+
+    #Explicitly whitelist safe public fields (never exposing password_hash)
+    return jsonify({
+        "id": user.id,
+        "username": user.username,
+        "role": user.role,
+        "created_at": user.created_at.isoformat() if user.created_at else None
+    }), 200
