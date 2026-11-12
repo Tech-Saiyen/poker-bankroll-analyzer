@@ -5,7 +5,7 @@ from flask import Blueprint, current_app, jsonify, request, g
 from werkzeug.security import generate_password_hash
 from .extensions import db
 from .models import User
-from .decorators import require_auth
+from .decorators import require_auth, require_role
 
 # Creates the department blueprint
 # "poker_api" is its name, and __name__ helps my Flask locate its assets.
@@ -256,4 +256,17 @@ def update_user_profile():
         "username": user.username,
         "role": user.role,
         "created_at": user.created_at.isoformat() if user.created_at else None
+    }), 200
+
+# 10. Admin-Only Diagnostic Route (Two-Door Security Airlock)
+@poker_blueprint.route("/admin/ping", methods=["GET"])
+@require_auth
+@require_role("admin")
+def admin_ping():
+    """Simple admin-only endpoint proving role-based accesss control."""
+    return jsonify({
+        "status": "ok",
+        "message": "Welcome to the admin control room.",
+        "admin_id": g.current_user_id,
+        "role": g.current_user_role
     }), 200
