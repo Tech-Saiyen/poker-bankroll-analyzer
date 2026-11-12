@@ -1,10 +1,11 @@
 # poker_bankroll_analyzer/routes.py
 from datetime import datetime, timedelta, timezone
 import jwt
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, g
 from werkzeug.security import generate_password_hash
 from .extensions import db
-from .models import User
+from .models import User, db
+from .decorators import require_auth
 
 # Creates the department blueprint
 # "poker_api" is its name, and __name__ helps my Flask locate its assets.
@@ -148,6 +149,25 @@ def login_user():
 
     return jsonify({
         "access_token": access_token
+    }), 200
+
+# 7. The new token Security Guard
+@poker_blueprint.route("/auth/me", methods=["GET"])
+@require_auth
+def get_current_user():
+    """"Return the profile of the currently authenticated user."""
+    # Look up the user using the ID save by @require_auth
+    user = db.session.get(User, g.current_user_id)
+
+    #Edge case: Valid token, but the user was deleted from the database
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify({
+        "id": user.id,
+        "username": user.username,
+        "role": user.role,
+        "created_at": user.created_at.isoformat() if user.created_at else None
     }), 200
 
     
