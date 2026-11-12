@@ -194,3 +194,66 @@ def get_user_profile():
         "role": user.role,
         "created_at": user.created_at.isoformat() if user.created_at else None
     }), 200
+
+# 9. User Profile Update Route(Allowlist-Protected)
+@poker_blueprint.route("/users/me", methods=["PATCH"])
+@require_auth
+def update_user_profile():
+    """Safely update allowlisted profile fields for the currently logged-in user."""
+    user = db.session.get(User, g.current_user_id)
+
+    if not user:
+        return jsonify({
+            "code": "NOT_FOUND",
+            "message": "User not found."
+        }), 404
+
+    data = request.get_json(silent=True)
+    if not data or not isinstance(data, dict):
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "Request body must be a valid JSON object."
+        }), 400
+
+    # Strict allowlist: Only 'username' can ever be updated here
+    allowed_fields = {"username"}
+    forbidden_fields = set(data.keys()) - allowed_fields
+    if forbidden_fields:
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "Only 'username' can be updated on this endpoint."
+    }), 400
+
+    # Validate the new username using the same bouncer rules as registration
+    new_username = data.get("username")
+    if not new_username or not isinstance(new_username, str):
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "Username is required."
+        }), 400
+
+    new_username = new_username.strip()
+    if len(new_username) < 3 or len(new_username) > 30:
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "Username must be between 3 and 30 characters long."
+        }), 400
+
+    # Check if a DIFFERENT user already owns this username (allow keeping your own current name)
+    existing_user = User.query.filter_by(username=new_username).first()
+    if existing_user and existing_user.id != user.id:
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "Username is already taken."
+        }), 409
+
+    # Apply the safe update and save to SQLite
+    user.username = new_username
+    db.session.commit()
+
+    return jsonify({
+        "id": user.id,
+        "username": user.username,
+        "role": user.role,
+        "created_at": user.created_at.isoformat() if user.created_at else None
+    }), 200
