@@ -5,6 +5,7 @@ class Config:
     """Base config class with settings common to all environments."""
     # This is the fallback security secret. os.environ.get reads from the computer's system variables.
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET", "super-secret-fallback-key-for-local-dev")
+    JWT_ACCESS_TOKEN_EXPIRES_MINUTES = int(os.environ.get("JWT_EXPIRES_MINUTES", 60))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class DevelopmentConfig(Config):

@@ -1,5 +1,7 @@
 # poker_bankroll_analyzer/routes.py
-from flask import Blueprint, jsonify, request
+from datetime import datetime, timedelta, timezone
+import jwt
+from flask import Blueprint, current_app, jsonify, request
 from werkzeug.security import generate_password_hash
 from .extensions import db
 from .models import User
@@ -129,9 +131,23 @@ def login_user():
             "message": "Invalid username or password."
         }), 401
 
-    # Success Path (Credentials are verified!)
+    # Calculate the future expiration timestamp using UTC and the config value
+    expires_minutes = current_app.config["JWT_ACCESS_TOKEN_EXPIRES_MINUTES"]
+    expiration_time = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
+
+    # Builds the wristband payload
+    payload = {
+        "sub": str(user.id),
+        "role": user.role,
+        "exp": expiration_time
+    }
+
+    # Signs the token using our secret key from config and the HS256 algorith
+    secret_key = current_app.config["JWT_SECRET_KEY"]
+    access_token = jwt.encode(payload, secret_key, algorithm="HS256")
+
     return jsonify({
-        "status": "authenticated",
-        "message": f"Welcome back, {user.username}!",
-        "user_id": user.id
+        "access_token": access_token
     }), 200
+
+    

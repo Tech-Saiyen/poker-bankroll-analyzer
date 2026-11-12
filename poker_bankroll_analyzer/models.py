@@ -15,6 +15,7 @@ class User(db.Model):
 
     #3. The secure cryptographic password vault box (long enough to store complex hashes)
     password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), default="user", nullable=False)
 
     #4. The automatic timestamp clock (records exactly hen the user joined the ecosystem)
     created_at = db.Column(
