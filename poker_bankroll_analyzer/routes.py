@@ -1,10 +1,11 @@
 # poker_bankroll_analyzer/routes.py
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal, InvalidOperation
 import jwt
 from flask import Blueprint, current_app, jsonify, request, g
 from werkzeug.security import generate_password_hash
 from .extensions import db
-from .models import User
+from .models import User, PokerSession
 from .decorators import require_auth, require_role
 
 # Creates the department blueprint
@@ -270,3 +271,136 @@ def admin_ping():
         "admin_id": g.current_user_id,
         "role": g.current_user_role
     }), 200
+
+# 11. Create Poker Session Route (Token-Owned)
+@poker_blueprint.route("/poker-sessions", methods=["POST"])
+@require_auth
+def create_poker_session():
+    """Log a new poker session owned strictly by the authenticated user."""
+    data = request.get_json(silent=True)
+    if not data or not isinstance(data, dict):
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "Request body must be a valid JSON object."
+        }), 400
+
+    # 1. Validate required field: game_type
+    game_type = data.get("game_type")
+    if not game_type or not isinstance(game_type, str) or not game_type.strip():
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "game_type is required."
+        }), 400
+    game_type = game_type.strip()
+    if len(game_type) > 50:
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "game_type must be 50 characters or fewer."
+        }), 400
+
+    # 2. Validate required money fields: buy_in and cash_out
+    if "buy_in" not in data or "cash_out" not in data:
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "buy_in and cash_out are required."
+        }), 400
+
+    try:
+        buy_in = Decimal(str(data["buy_in"]))
+        cash_out = Decimal(str(data["cash_out"]))
+    except (InvalidOperation, TypeError, ValueError):
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "buy_in and cash_out must be valid numbers."
+        }), 400
+
+    if buy_in < 0 or cash_out < 0:
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "buy_in and cash_out cannot be negative."
+        }), 400
+
+    # 3. Validate optional played_at (defaults to current UTC if omitted)
+    played_at = datetime.now(timezone.utc)
+    if data.get("played_at") is not None:
+        if not isinstance(data["played_at"], str):
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "played_at must be an ISO-8601 date/time string."
+            }), 400
+        try:
+            played_at = datetime.fromisoformat(data["played_at"])
+        except ValueError:
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "played_at must be a valid ISO-8601 date/time string."
+            }), 400
+
+    # 4. Validate optional duration_minutes if provided
+    duration_minutes = data.get("duration_minutes")
+    if duration_minutes is not None:
+        if isinstance(duration_minutes, bool) or not isinstance(duration_minutes, int) or duration_minutes < 0:
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "duration_minutes must be a non-negative integer."
+            }), 400
+
+    # 5. Build session with user_id set STRICTLY from g.current_user_id (never from JSON)
+    new_session = PokerSession(
+        user_id=g.current_user_id,
+        game_type=game_type,
+        buy_in=buy_in,
+        cash_out=cash_out,
+        played_at=played_at,
+        stakes=data.get("stakes").strip() if isinstance(data.get("stakes"), str) else None,
+        location=data.get("location").strip() if isinstance(data.get("location"), str) else None,
+        duration_minutes=duration_minutes,
+        notes=data.get("notes").strip() if isinstance(data.get("notes"), str) else None,
+    )
+
+    db.session.add(new_session)
+    db.session.commit()
+
+    net_profit = float(new_session.cash_out - new_session.buy_in)
+
+    return jsonify({
+        "id": new_session.id,
+        "user_id": new_session.user_id,
+        "game_type": new_session.game_type,
+        "buy_in": float(new_session.buy_in),
+        "cash_out": float(new_session.cash_out),
+        "net_profit": net_profit,
+        "played_at": new_session.played_at.isoformat(),
+        "created_at": new_session.created_at.isoformat(),
+        "stakes": new_session.stakes,
+        "location": new_session.location,
+        "duration_minutes": new_session.duration_minutes,
+        "notes": new_session.notes,
+    }), 201
+
+# 12. List Poker Sessions Rout (Owner-Filtered)
+@poker_blueprint.route("/poker-sessions", methods=["GET"])
+@require_auth
+def list_poker_sessions():
+    """Return all poker sessions owned by the currently authenticated user."""
+    sessions = PokerSession.query.filter_by(user_id=g.current_user_id).all()
+
+    results = [
+        {
+            "id": session.id,
+            "user_id": session.user_id,
+            "game_type": session.game_type,
+            "buy_in": float(session.buy_in),
+            "cash_out": float(session.cash_out),
+            "net_profit": float(session.cash_out - session.buy_in),
+            "played_at": session.played_at.isoformat(),
+            "created_at": session.created_at.isoformat(),
+            "stakes": session.stakes,
+            "location": session.location,
+            "duration_minutes": session.duration_minutes,
+            "notes": session.notes
+        }
+        for session in sessions
+    ]
+
+    return jsonify(results), 200
