@@ -24,6 +24,9 @@ class User(db.Model):
         nullable=False
     )
 
+    # 5. Python-side one-to-many navigation to all sessions owned by this user
+    poker_sessions = db.relationship("PokerSession", back_populates="user")
+
     def check_password(self, candidate_password):
         """Compares a plain-text login password against the stored cryptographic hash."""
         return check_password_hash(self.password_hash, candidate_password)
@@ -62,6 +65,9 @@ class PokerSession(db.Model):
     location = db.Column(db.String(100), nullable=True)
     duration_minutes = db.Column(db.Integer, nullable=True)
     notes = db.Column(db.Text, nullable=True)
+
+    # 5. Python-side many-to-one navigation back to the owning User
+    user = db.relationship("User", back_populates="poker_sessions")
 
     def __repr__(self):
         return f"<PokerSession {self.id} User={self.user_id} {self.game_type}>"
