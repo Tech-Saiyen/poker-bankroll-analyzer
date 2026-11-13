@@ -404,3 +404,31 @@ def list_poker_sessions():
     ]
 
     return jsonify(results), 200
+
+# 13. Read a single poker session by ID route
+@poker_blueprint.route("/poker-sessions/<int:session_id>", methods=["GET"])
+@require_auth
+def get_poker_session(session_id):
+    """Fetch a single poker session by ID (returns JSON 404 if missing)."""
+    session = db.session.get(PokerSession, session_id)
+
+    if not session:
+        return jsonify({
+            "code": "NOT_FOUND",
+            "message": "Poker session not found."
+        }), 404
+
+    return jsonify({
+        "id": session.id,
+        "user_id": session.user_id,
+        "game_type": session.game_type,
+        "buy_in": float(session.buy_in),
+        "cash_out": float(session.cash_out),
+        "net_profit": float(session.cash_out - session.buy_in),
+        "played_at": session.played_at.isoformat(),
+        "created_at": session.created_at.isoformat(),
+        "stakes": session.stakes,
+        "location": session.location,
+        "duration_minutes": session.duration_minutes,
+        "notes": session.notes,
+    }), 200
