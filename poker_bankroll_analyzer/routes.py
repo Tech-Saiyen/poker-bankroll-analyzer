@@ -432,3 +432,178 @@ def get_poker_session(session_id):
         "duration_minutes": session.duration_minutes,
         "notes": session.notes,
     }), 200
+
+# 14. UPDATE POKER SESSION BY ID ROUTE (PARTIAL PATCH)
+@poker_blueprint.route("/poker-sessions/<int:session_id>", methods=["PATCH"])
+@require_auth
+def update_poker_session(session_id):
+    """Partially update an existing poker session by ID."""
+    session = db.session.get(PokerSession, session_id)
+
+    if not session:
+        return jsonify({
+            "code": "NOT_FOUND",
+            "message": "Poker session not found."
+        }), 404
+
+    data = request.get_json(silent=True)
+    if not data or not isinstance(data, dict):
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": "Request body must be a valid JSON object."
+        }), 400
+
+    # Strict allowlist: never permit tampering with id, user_id, or created_at
+    allowed_fields = {
+        "game_type",
+        "buy_in",
+        "cash_out",
+        "played_at",
+        "stakes",
+        "location",
+        "duration_minutes",
+        "notes",
+    }
+    forbidden_fields = [key for key in data.keys() if key not in allowed_fields]
+    if forbidden_fields:
+        return jsonify({
+            "code": "VALIDATION_ERROR",
+            "message": f"Cannot update field(s): {', '.join(forbidden_fields)}."
+        }), 400
+
+    # Validate & apply only the fields provided in the PATCH payload
+    if "game_type" in data:
+        game_type = data["game_type"]
+        if not game_type or not isinstance(game_type, str) or not game_type.strip():
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "game_type must be a non-empty string."
+            }), 400
+        game_type = game_type.strip()
+        if len(game_type) > 50:
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "game_type must be 50 characters or fewer."
+            }), 400
+        session.game_type = game_type
+
+    if "buy_in" in data:
+        try:
+            buy_in = Decimal(str(data["buy_in"]))
+        except (InvalidOperation, TypeError, ValueError):
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "buy_in must be a valid number."
+            }), 400
+        if buy_in < 0:
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "buy_in cannot be negative."
+            }), 400
+        session.buy_in = buy_in
+
+    if "cash_out" in data:
+        try:
+            cash_out = Decimal(str(data["cash_out"]))
+        except (InvalidOperation, TypeError, ValueError):
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "cash_out must be a valid number."
+            }), 400
+        if cash_out < 0:
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "cash_out cannot be negative."
+            }), 400
+        session.cash_out = cash_out
+
+    if "played_at" in data:
+        if not isinstance(data["played_at"], str):
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "played_at must be an ISO-8601 date/time string."
+            }), 400
+        try:
+            session.played_at = datetime.fromisoformat(data["played_at"])
+        except ValueError:
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "played_at must be a valid ISO-8601 date/time string."
+            }), 400
+
+    if "duration_minutes" in data:
+        duration_minutes = data["duration_minutes"]
+        if duration_minutes is not None:
+            if isinstance(duration_minutes, bool) or not isinstance(duration_minutes, int) or duration_minutes < 0:
+                return jsonify({
+                    "code": "VALIDATION_ERROR",
+                    "message": "duration_minutes must be a non-negative integer."
+                }), 400
+        session.duration_minutes = duration_minutes
+
+    if "stakes" in data:
+        stakes = data["stakes"]
+        if stakes is not None and not isinstance(stakes, str):
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "stakes must be a string or null."
+            }), 400
+        session.stakes = stakes.strip() if isinstance(stakes, str) else None
+
+    if "location" in data:
+        location = data["location"]
+        if location is not None and not isinstance(location, str):
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "location must be a string or null."
+            }), 400
+        session.location = location.strip() if isinstance(location, str) else None
+
+    if "notes" in data:
+        notes = data["notes"]
+        if notes is not None and not isinstance(notes, str):
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": "notes must be a string or null."
+            }), 400
+        session.notes = notes.strip() if isinstance(notes, str) else None
+
+    # Persist all staged changes permanently to SQLite
+    db.session.commit()
+
+    return jsonify({
+        "id": session.id,
+        "user_id": session.user_id,
+        "game_type": session.game_type,
+        "buy_in": float(session.buy_in),
+        "cash_out": float(session.cash_out),
+        "net_profit": float(session.cash_out - session.buy_in),
+        "played_at": session.played_at.isoformat(),
+        "created_at": session.created_at.isoformat(),
+        "stakes": session.stakes,
+        "location": session.location,
+        "duration_minutes": session.duration_minutes,
+        "notes": session.notes,
+    }), 200
+
+# 15. DELETE POKER SESSION BY ID ROUTE
+@poker_blueprint.route("/poker-sessions/<int:session_id>", methods=["DELETE"])
+@require_auth
+def delete_poker_session(session_id):
+    """Delete an existing poker session by ID (returns 204 with no body)."""
+    session = db.session.get(PokerSession, session_id)
+
+    if not session:
+        return jsonify({
+            "code": "NOT_FOUND",
+            "message": "Poker session not found."
+        }), 404
+
+    db.session.delete(session)
+    db.session.commit()
+
+    return "", 204
+
+
+
+        
