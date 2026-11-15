@@ -405,18 +405,33 @@ def list_poker_sessions():
 
     return jsonify(results), 200
 
-# 13. Read a single poker session by ID route
+
+# DRY Helper ..Don't Repeat Yourself master security ownership checkpoint
+def get_owned_session_or_404(session_id):
+    """Fetch a PokerSession only if it exists AND belongs to g.current_user_id."""
+    session = db.session.get(PokerSession, session_id)
+
+    if not session or session.user_id != g.current_user_id:
+        error_response = (
+            jsonify({
+                "code": "NOT_FOUND",
+                "message": "Poker session not found."
+            }),
+            404,
+        )
+        return None, error_response
+
+    return session, None
+
+
+# 13. Read a single poker session by ID route (OWNER-PROTECTED)
 @poker_blueprint.route("/poker-sessions/<int:session_id>", methods=["GET"])
 @require_auth
 def get_poker_session(session_id):
-    """Fetch a single poker session by ID (returns JSON 404 if missing)."""
-    session = db.session.get(PokerSession, session_id)
-
-    if not session:
-        return jsonify({
-            "code": "NOT_FOUND",
-            "message": "Poker session not found."
-        }), 404
+    """Fetch a single poker session owned by the authenticated user."""
+    session, error_response = get_owned_session_or_404(session_id)
+    if error_response:
+        return error_response
 
     return jsonify({
         "id": session.id,
@@ -433,18 +448,15 @@ def get_poker_session(session_id):
         "notes": session.notes,
     }), 200
 
-# 14. UPDATE POKER SESSION BY ID ROUTE (PARTIAL PATCH)
+
+# 14. UPDATE POKER SESSION BY ID ROUTE (OWNER-PROTECTED PARTIAL PATCH)
 @poker_blueprint.route("/poker-sessions/<int:session_id>", methods=["PATCH"])
 @require_auth
 def update_poker_session(session_id):
-    """Partially update an existing poker session by ID."""
-    session = db.session.get(PokerSession, session_id)
-
-    if not session:
-        return jsonify({
-            "code": "NOT_FOUND",
-            "message": "Poker session not found."
-        }), 404
+    """Partially update a poker session owned by the authenticated user."""
+    session, error_response = get_owned_session_or_404(session_id)
+    if error_response:
+        return error_response
 
     data = request.get_json(silent=True)
     if not data or not isinstance(data, dict):
@@ -586,23 +598,21 @@ def update_poker_session(session_id):
         "notes": session.notes,
     }), 200
 
-# 15. DELETE POKER SESSION BY ID ROUTE
+
+# 15. DELETE POKER SESSION BY ID ROUTE (OWNER-PROTECTED)
 @poker_blueprint.route("/poker-sessions/<int:session_id>", methods=["DELETE"])
 @require_auth
 def delete_poker_session(session_id):
-    """Delete an existing poker session by ID (returns 204 with no body)."""
-    session = db.session.get(PokerSession, session_id)
-
-    if not session:
-        return jsonify({
-            "code": "NOT_FOUND",
-            "message": "Poker session not found."
-        }), 404
+    """Delete a poker session owned by the authenticated user."""
+    session, error_response = get_owned_session_or_404(session_id)
+    if error_response:
+        return error_response
 
     db.session.delete(session)
     db.session.commit()
 
     return "", 204
+
 
 
 
