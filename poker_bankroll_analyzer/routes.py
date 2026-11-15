@@ -359,14 +359,51 @@ def create_poker_session():
         "notes": new_session.notes,
     }), 201
 
-# 12. List Poker Sessions Rout (Owner-Filtered)
+# 12. List Poker Sessions Route (Owner-Filtered + Pagination Validation)
 @poker_blueprint.route("/poker-sessions", methods=["GET"])
 @require_auth
 def list_poker_sessions():
     """Return all poker sessions owned by the currently authenticated user."""
-    sessions = PokerSession.query.filter_by(user_id=g.current_user_id).all()
+    raw_page = request.args.get("page", "1")
+    raw_per_page = request.args.get("per_page", "10")
 
-    results = [
+    try:
+        page = int(raw_page)
+        per_page = int(raw_per_page)
+    except (TypeError, ValueError):
+        return error_response(
+            "VALIDATION_ERROR",
+            "page and per_page must be valid integers.",
+            400,
+        )
+
+    if page < 1:
+        return error_response(
+            "VALIDATION_ERROR",
+            "page must be a positive integer (>=1).",
+            400,
+        )
+
+    if per_page < 1 or per_page > 50:
+        return error_response(
+            "VALIDATION_ERROR",
+            "per_page must be between 1 and 50.",
+            400,
+        )
+
+    base_query = (
+        PokerSession.query
+        .filter_by(user_id=g.current_user_id)
+        .order_by(PokerSession.id.asc())
+    )
+
+    pagination = base_query.paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False,
+    )
+
+    items = [
         {
             "id": session.id,
             "user_id": session.user_id,
@@ -381,11 +418,16 @@ def list_poker_sessions():
             "duration_minutes": session.duration_minutes,
             "notes": session.notes
         }
-        for session in sessions
+        for session in pagination.items
     ]
 
-    return jsonify(results), 200
-
+    return jsonify({
+        "items": items,
+        "page": pagination.page,
+        "per_page": pagination.per_page,
+        "total": pagination.total,
+        "pages": pagination.pages,
+    }), 200
 
 # DRY Helper ..Don't Repeat Yourself master security ownership checkpoint
 def get_owned_session_or_404(session_id):
