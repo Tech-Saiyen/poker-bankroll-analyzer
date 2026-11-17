@@ -1,0 +1,23 @@
+# Local virtual environment & Python bytecode
+
+venv
+**pycache**
+\*.pyc
+.pytest_cache
+
+# Version control & local secrets
+
+.git
+.gitignore
+.env
+
+# Local SQLite database files & dev instance folder
+
+instance
+_.db
+_.sqlite
+\*.sqlite3
+
+# Test suite (not needed in runtime image)
+
+tests
