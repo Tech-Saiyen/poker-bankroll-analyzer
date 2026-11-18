@@ -29,7 +29,7 @@ def create_app(config_name="development"):
     app.register_blueprint(poker_blueprint, url_prefix="/api")
 
     # temp log for experiment
-    print(f"\n 🔑ACTIVE JWT SECRET KEY IN SYSTEM: {app.config['JWT_SECRET_KEY']}\n")
+    print("🔑 JWT_SECRET_KEY configured:", bool(app.config.get("JWT_SECRET_KEY")))
 
     # Hand the fully configured application back to the server. 
     return app
