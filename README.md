@@ -12,7 +12,7 @@ Before we turn the engine on, we create a secure, isolated sandbox on your compu
    Bring the secure source code files from GitHub directly onto your local machine:
 
    ```bash
-   git clone https://github.com
+   git clone https://github.com/Tech-Saiyen/poker-bankroll-analyzer.git
    cd poker-bankroll-analyzer
    ```
 
