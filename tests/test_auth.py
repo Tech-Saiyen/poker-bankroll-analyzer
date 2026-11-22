@@ -214,5 +214,112 @@ def test_admin_route_allows_admin_user_with_200(client):
     assert data["status"] == "ok"
     assert data["role"] == "admin"
 
+def test_player_profile_update_and_public_card(client):
+    """New accounts default to 'player' and can update & publish their DFW profile card."""
+    reg_res = client.post(
+        "/api/auth/register",
+        json={"username": "dallas_grinder", "password": "GrinderPass123!"}
+    )
+    assert reg_res.status_code == 201
+    user_id = reg_res.get_json()["id"]
+    assert reg_res.get_json()["role"] == "player"
+
+    login_res = client.post(
+        "/api/auth/login",
+        json={"username": "dallas_grinder", "password": "GrinderPass123!"}
+    )
+    token = login_res.get_json()["access_token"]
+
+    patch_res = client.patch(
+        "/api/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "display_name": "North Dallas Crusher",
+            "home_room": "Texas Card House Dallas",
+            "style_tags": "TAG,PLO Specialist",
+            "hendonmob_url": "https://thehendonmob.com"
+        }
+    )
+    assert patch_res.status_code == 200
+    updated = patch_res.get_json()
+    assert updated["display_name"] == "North Dallas Crusher"
+    assert updated["home_room"] == "Texas Card House Dallas"
+    assert updated["is_verified"] is False
+
+    public_res = client.get(f"/api/players/{user_id}")
+    assert public_res.status_code == 200
+    assert public_res.get_json()["style_tags"] == "TAG,PLO Specialist"
+    assert "password_hash" not in public_res.get_json()
+
+
+def test_player_cannot_self_verify_or_escalate_role(client):
+    """Players cannot modify role or is_verified on /users/me or call admin governance."""
+    reg_res = client.post(
+        "/api/auth/register",
+        json={"username": "sneaky_player", "password": "SneakyPass123!"}
+    )
+    user_id = reg_res.get_json()["id"]
+
+    login_res = client.post(
+        "/api/auth/login",
+        json={"username": "sneaky_player", "password": "SneakyPass123!"}
+    )
+    token = login_res.get_json()["access_token"]
+
+    self_verify = client.patch(
+        "/api/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"is_verified": True}
+    )
+    assert self_verify.status_code == 400
+
+    admin_attempt = client.patch(
+        f"/api/admin/users/{user_id}",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"role": "room_manager"}
+    )
+    assert admin_attempt.status_code == 403
+
+
+def test_admin_can_assign_room_manager_and_verify_player(client):
+    """Only an admin can assign room_manager role and grant verified player badges."""
+    with client.application.app_context():
+        admin = User(
+            username="dfw_boss",
+            password_hash=generate_password_hash("BossPass123!"),
+            role="admin"
+        )
+        player = User(
+            username="floor_lead",
+            password_hash=generate_password_hash("FloorPass123!"),
+            role="player"
+        )
+        db.session.add_all([admin, player])
+        db.session.commit()
+        target_id = player.id
+
+    login_res = client.post(
+        "/api/auth/login",
+        json={"username": "dfw_boss", "password": "BossPass123!"}
+    )
+    admin_token = login_res.get_json()["access_token"]
+
+    gov_res = client.patch(
+        f"/api/admin/users/{target_id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"role": "room_manager", "is_verified": True}
+    )
+    assert gov_res.status_code == 200
+    body = gov_res.get_json()
+    assert body["role"] == "room_manager"
+    assert body["is_verified"] is True
+
+
+
+
+
+
+
+
 
 
