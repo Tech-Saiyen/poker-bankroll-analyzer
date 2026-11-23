@@ -1,9 +1,9 @@
 # poker_bankroll_analyzer/venue_routes.py
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import math
 from flask import Blueprint, g, jsonify, request
 from .extensions import db
-from .models import LiveGame, PokerVenue, User, VALID_VENUE_TYPES
+from .models import LiveGame, PokerVenue, User, VenueCheckIn, VALID_VENUE_TYPES
 from .decorators import require_auth, require_role
 
 venue_blueprint = Blueprint("venues", __name__)
@@ -274,6 +274,50 @@ def upsert_live_game(venue_id):
     db.session.add(new_game)
     db.session.commit()
     return jsonify(new_game.to_dict()), 201
+
+
+@venue_blueprint.route("/venues/<int:venue_id>/check-in", methods=["POST"])
+@require_auth
+def check_in_at_venue(venue_id):
+    """Lightweight 6-hour player check-in showing live social buzz at a DFW venue."""
+    venue = db.session.get(PokerVenue, venue_id)
+    if not venue or not venue.is_active:
+        return jsonify({"code": "NOT_FOUND", "message": "Poker venue not found."}), 404
+
+    now = datetime.now(timezone.utc)
+    # Remove any expired check-ins for this user and refresh if already checked in here
+    VenueCheckIn.query.filter(VenueCheckIn.user_id == g.current_user_id).delete()
+
+    checkin = VenueCheckIn(
+        user_id=g.current_user_id,
+        venue_id=venue.id,
+        checked_in_at=now,
+        expires_at=now + timedelta(hours=6),
+    )
+    db.session.add(checkin)
+    db.session.commit()
+    return jsonify(checkin.to_dict()), 201
+
+
+@venue_blueprint.route("/venues/<int:venue_id>/check-ins", methods=["GET"])
+def list_active_venue_checkins(venue_id):
+    """Lists players currently checked in at a venue within the last 6 hours."""
+    venue = db.session.get(PokerVenue, venue_id)
+    if not venue or not venue.is_active:
+        return jsonify({"code": "NOT_FOUND", "message": "Poker venue not found."}), 404
+
+    now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+    active = (
+        VenueCheckIn.query
+        .filter(
+            VenueCheckIn.venue_id == venue.id,
+            VenueCheckIn.expires_at > now_naive,
+        )
+        .order_by(VenueCheckIn.checked_in_at.desc())
+        .all()
+    )
+    items = [c.to_dict() for c in active]
+    return jsonify({"venue_id": venue.id, "active_count": len(items), "players": items}), 200
 
 
 def seed_dfw_venues_data():
