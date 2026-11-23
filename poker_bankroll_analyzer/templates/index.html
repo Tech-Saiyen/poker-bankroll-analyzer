@@ -315,7 +315,32 @@
       .nav-icon {
         font-size: 1.15rem;
       }
-    </style>
+  
+    .player-card {
+      background: linear-gradient(135deg, #1b2838 0%, #0f1722 55%, #1e293b 100%);
+      border: 2px solid var(--gold); border-radius: 16px; padding: 16px; margin-bottom: 14px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45), inset 0 0 20px rgba(245, 185, 66, 0.12);
+    }
+    .player-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .tier-crest {
+      background: var(--gold); color: #0b1116; font-weight: 900; font-size: 0.7rem;
+      padding: 3px 9px; border-radius: 6px; letter-spacing: 0.8px;
+    }
+    .player-card-name { font-size: 1.25rem; font-weight: 900; letter-spacing: 0.3px; }
+    .player-card-sub { font-size: 0.8rem; color: var(--gold); font-weight: 600; margin-top: 2px; }
+    .player-card-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+      background: rgba(11, 17, 22, 0.7); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px; margin-top: 12px; text-align: center;
+    }
+    .pc-stat-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; }
+    .pc-stat-val { font-size: 0.95rem; font-weight: 800; margin-top: 2px; }
+    .pw-wrap { position: relative; }
+    .pw-eye {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem;
+    }
+  </style>
   </head>
   <body>
     <header>
@@ -490,7 +515,15 @@
           <label>Username</label>
           <input id="auth-user" required placeholder="e.g. dallas_grinder" />
           <label>Password</label>
-          <input id="auth-pass" type="password" required placeholder="Minimum 8 characters" />
+          <div style="display:flex;gap:6px;">
+            <input id="auth-pass" type="password" required placeholder="Minimum 8 characters" />
+            <button type="button" class="btn btn-secondary btn-sm" onclick="togglePass('auth-pass')">👁️</button>
+          </div>
+          <label>Confirm Password (Only When Registering New Account)</label>
+          <div style="display:flex;gap:6px;">
+            <input id="auth-pass-confirm" type="password" placeholder="Re-enter password to register" />
+            <button type="button" class="btn btn-secondary btn-sm" onclick="togglePass('auth-pass-confirm')">👁️</button>
+          </div>
           <div class="row-2" style="margin-top:14px;">
             <button type="submit" class="btn">Log In</button>
             <button type="button" class="btn btn-secondary" onclick="registerAccount()">Register Free</button>
@@ -499,10 +532,38 @@
       </div>
 
       <div id="profile-panel" style="display:none;">
+        <!-- MADDEN / ROOKIE PLAYER TRADING CARD -->
+        <div class="card featured" style="background:linear-gradient(145deg,#182430,#0f171e);border:2px solid var(--gold);">
+          <div class="card-header">
+            <div>
+              <span class="sponsor-tag">OFFICIAL TEXAS POKER CARD</span>
+              <h2 id="card-name" style="font-size:1.25rem;margin-top:2px;">Player Name</h2>
+              <div id="card-room" class="venue-meta">Home Room: Unassigned</div>
+            </div>
+            <span id="card-tier-crest" class="pill-badge">AMATEUR</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;">
+            <span id="card-style-badge" class="count-open">TAG</span>
+            <span id="card-role-badge" class="count-wait">PLAYER</span>
+          </div>
+          <div class="stat-grid" style="margin:10px 0 6px;">
+            <div class="stat-box" style="padding:8px 10px;">
+              <div class="stat-label">Career Rate</div>
+              <div id="card-hourly" class="stat-val pos" style="font-size:1.05rem;">$0.00/hr</div>
+            </div>
+            <div class="stat-box" style="padding:8px 10px;">
+              <div class="stat-label">Logged Hours</div>
+              <div id="card-hours" class="stat-val" style="font-size:1.05rem;">0.0 hrs</div>
+            </div>
+          </div>
+          <p id="card-bio" class="venue-meta" style="margin-top:6px;font-style:italic;"></p>
+          <div id="card-hendon-wrap" style="margin-top:8px;"></div>
+        </div>
+
         <div class="card">
           <div class="card-header">
             <div>
-              <h3 id="prof-title">Player Profile</h3>
+              <h3 id="prof-title">Edit Player Card</h3>
               <p id="prof-meta" class="venue-meta"></p>
             </div>
             <button class="btn btn-secondary btn-sm" onclick="logout()">Log Out</button>
@@ -510,15 +571,22 @@
           <form id="profile-form">
             <label>Display Name / Poker Alias</label>
             <input id="prof-display" placeholder="North Dallas Crusher" />
-            <label>Home DFW Room</label>
-            <input id="prof-homeroom" placeholder="Texas Card House Dallas" />
-            <label>Playing Style Tags</label>
-            <input id="prof-tags" placeholder="TAG, PLO Specialist, MTT Grinder" />
+            <label>Home Poker Room</label>
+            <select id="prof-homeroom"><option value="">-- Select Your Home Room --</option></select>
+            <label>Playing Style</label>
+            <select id="prof-tags">
+              <option value="TAG (Tight-Aggressive)">TAG (Tight-Aggressive)</option>
+              <option value="LAG (Loose-Aggressive)">LAG (Loose-Aggressive)</option>
+              <option value="PLO Specialist">PLO Specialist</option>
+              <option value="MTT / Tournament Crusher">MTT / Tournament Crusher</option>
+              <option value="Freeroll League Regular">Freeroll League Regular</option>
+              <option value="GTO Solver Grinder">GTO Solver Grinder</option>
+            </select>
             <label>Hendon Mob Profile URL (Optional)</label>
             <input id="prof-hendon" placeholder="https://thehendonmob.com..." />
-            <label>Bio</label>
-            <textarea id="prof-bio" rows="2" placeholder="Grinding 1/2 and 2/5 around DFW..."></textarea>
-            <button type="submit" class="btn" style="width:100%;margin-top:12px;">Update Profile Card</button>
+            <label>Bio (Optional)</label>
+            <textarea id="prof-bio" rows="2" placeholder="Optional short poker bio..."></textarea>
+            <button type="submit" class="btn" style="width:100%;margin-top:12px;">Save Player Card</button>
           </form>
         </div>
 
@@ -526,7 +594,7 @@
           <span class="sponsor-tag">Floor Manager &amp; League Director Portal</span>
           <h3 style="margin:4px 0 8px;">10-Second Live Floor &amp; Stream Updater</h3>
           <form id="floor-form">
-            <label>Select DFW Venue / Host Bar</label>
+            <label>Select Poker Venue / Host Bar</label>
             <select id="fm-venue-id" required></select>
             <div class="row-2">
               <div>
@@ -561,7 +629,6 @@
         <div id="admin-control-panel" class="card featured" style="display:none;">
           <span class="sponsor-tag">Admin Command Center</span>
           <h3 style="margin:4px 0 8px;">Quick Add Venue, Spotlight &amp; Sponsor</h3>
-
           <form id="admin-venue-form" style="margin-bottom:14px;">
             <strong style="font-size:0.86rem;">1. Add New Venue / League Host Bar</strong>
             <input id="adm-v-name" placeholder="Venue Name (e.g. Buffalo Joe's - AHL)" required style="margin-top:6px;" />
@@ -572,31 +639,27 @@
                 <option value="restaurant">Restaurant</option>
                 <option value="casino">Casino</option>
               </select>
-              <input id="adm-v-city" placeholder="City (e.g. Forney)" required />
+              <input id="adm-v-city" placeholder="City (e.g. Dallas, Houston)" required />
             </div>
             <button type="submit" class="btn btn-sm" style="width:100%;margin-top:8px;">+ Add Venue to Directory</button>
           </form>
-
           <form id="admin-article-form" style="margin-bottom:14px;">
             <strong style="font-size:0.86rem;">2. Publish Player Spotlight / News</strong>
-            <input id="adm-a-title" placeholder="Title (e.g. North Dallas Spotlight: ...)" required style="margin-top:6px;" />
+            <input id="adm-a-title" placeholder="Title (e.g. Texas Player Spotlight: ...)" required style="margin-top:6px;" />
             <textarea id="adm-a-body" rows="2" placeholder="Article story or interview..." required style="margin-top:6px;"></textarea>
             <input id="adm-a-aff" placeholder="Affiliate URL (Optional)" style="margin-top:6px;" />
             <button type="submit" class="btn btn-sm" style="width:100%;margin-top:8px;">Publish Article</button>
           </form>
-
           <form id="admin-sponsor-form">
             <strong style="font-size:0.86rem;">3. Activate Top Sponsor Banner</strong>
             <input id="adm-s-name" placeholder="Sponsor Name" required style="margin-top:6px;" />
-            <input id="adm-s-tag" placeholder="Tagline (e.g. 20% off for DFW players)" style="margin-top:6px;" />
+            <input id="adm-s-tag" placeholder="Tagline (e.g. 20% off for poker players)" style="margin-top:6px;" />
             <input id="adm-s-url" placeholder="Target Website URL (https://...)" required style="margin-top:6px;" />
             <button type="submit" class="btn btn-sm" style="width:100%;margin-top:8px;">Activate Top Banner</button>
           </form>
         </div>
       </div>
     </section>
-  </main>
-
   <nav class="bottom-nav">
     <button class="nav-btn active" id="nav-floor" onclick="switchTab('floor')"><span class="nav-icon">🎲</span>Live Floor</button>
     <button class="nav-btn" id="nav-bankroll" onclick="switchTab('bankroll')"><span class="nav-icon">📈</span>My Poker Life</button>
@@ -659,6 +722,8 @@
       const list = document.getElementById("venues-list");
       const sessSelect = document.getElementById("sess-venue");
       const fmSelect = document.getElementById("fm-venue-id");
+      const homeSelect = document.getElementById("prof-homeroom");
+      if (homeSelect) homeSelect.innerHTML = "<option value=\"\">-- Select Home Poker Room --</option>";
 
       sessSelect.innerHTML = '<option value="">-- Custom / Home Game --</option>';
       fmSelect.innerHTML = "";
@@ -672,6 +737,7 @@
         const opt = `<option value="v.id">{v.name} (${v.city})</option>`;
         sessSelect.innerHTML += opt;
         fmSelect.innerHTML += opt;
+        if (homeSelect) homeSelect.innerHTML += `<option value="${v.name}">${v.name} (${v.city})</option>`;
         const gamesHtml = (v.live_games || []).map(g => `
           <div class="game-row">
             <strong>${g.stakes} ${g.game_type}</strong>
@@ -781,19 +847,46 @@
         document.getElementById("bankroll-auth").style.display = "none";
         return;
       }
-      const res = await fetch("/api/users/me", { headers: { "Authorization": `Bearer ${token}` } });
+      const [res, statsRes] = await Promise.all([
+        fetch("/api/users/me", { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch("/api/poker-sessions/stats", { headers: { "Authorization": `Bearer ${token}` } })
+      ]);
       if (!res.ok) { logout(); return; }
       currentUser = await res.json();
-      document.getElementById("user-badge").textContent = `${currentUser.username} (${currentUser.tier.toUpperCase()})`;
+      const stats = statsRes.ok ? await statsRes.json() : { hourly_rate: 0, total_hours: 0, total_sessions: 0 };
+
+      document.getElementById("user-badge").textContent = currentUser.username + " (" + currentUser.tier.toUpperCase() + ")";
       document.getElementById("auth-forms").style.display = "none";
       document.getElementById("profile-panel").style.display = "block";
       document.getElementById("bankroll-guest").style.display = "none";
       document.getElementById("bankroll-auth").style.display = "block";
 
-      document.getElementById("prof-title").textContent = (currentUser.display_name || currentUser.username) + (currentUser.is_verified ? " ✅" : "");
-      document.getElementById("prof-meta").textContent = `Role: ${currentUser.role} • Tier: ${currentUser.tier}`;
+      const displayName = currentUser.display_name || currentUser.username;
+      const verifiedIcon = currentUser.is_verified ? " ✅" : "";
+      if (document.getElementById("pc-tier")) {
+        document.getElementById("pc-tier").textContent = currentUser.tier.toUpperCase() + (currentUser.is_verified ? " • VERIFIED" : "");
+        document.getElementById("pc-style").textContent = currentUser.style_tags || "DFW Grinder";
+        document.getElementById("pc-name").textContent = displayName + verifiedIcon;
+        document.getElementById("pc-room").textContent = "🏠 " + (currentUser.home_room || "Texas Poker Circuit");
+        document.getElementById("pc-bio").textContent = currentUser.bio || "";
+        document.getElementById("pc-hourly").textContent = "$" + Number(stats.hourly_rate || 0).toFixed(2) + "/hr";
+        document.getElementById("pc-hours").textContent = Number(stats.total_hours || 0).toFixed(1) + "h";
+        document.getElementById("pc-sessions").textContent = String(stats.total_sessions || 0);
+      }
+      const hmEl = document.getElementById("pc-hendon");
+      if (hmEl) {
+        if (currentUser.hendonmob_url) { hmEl.href = currentUser.hendonmob_url; hmEl.style.display = "inline-block"; }
+        else { hmEl.style.display = "none"; }
+      }
+
       document.getElementById("prof-display").value = currentUser.display_name || "";
-      document.getElementById("prof-homeroom").value = currentUser.home_room || "";
+      const homeEl = document.getElementById("prof-homeroom");
+      if (homeEl && currentUser.home_room) {
+        if (![...homeEl.options].some(o => o.value === currentUser.home_room)) {
+          homeEl.innerHTML += `<option value="currentUser.homeroom">{currentUser.home_room}</option>`;
+        }
+        homeEl.value = currentUser.home_room;
+      }
       document.getElementById("prof-tags").value = currentUser.style_tags || "";
       document.getElementById("prof-hendon").value = currentUser.hendonmob_url || "";
       document.getElementById("prof-bio").value = currentUser.bio || "";
@@ -805,9 +898,20 @@
         document.getElementById("fm-venue-id").value = String(currentUser.managed_venue_id);
       }
     }
+
+    function togglePw(id) {
+      const el = document.getElementById(id);
+      if (el) el.type = el.type === "password" ? "text" : "password";
+    }
+
     async function registerAccount() {
       const username = document.getElementById("auth-user").value.trim();
       const password = document.getElementById("auth-pass").value;
+      const confirmEl = document.getElementById("auth-pass-confirm");
+      if (confirmEl && confirmEl.value && password !== confirmEl.value) {
+        showToast("Passwords do not match!");
+        return;
+      }
       const res = await fetch("/api/auth/register", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
