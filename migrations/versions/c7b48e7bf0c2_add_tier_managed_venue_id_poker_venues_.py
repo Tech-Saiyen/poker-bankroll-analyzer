@@ -46,7 +46,7 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('users', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('tier', sa.String(length=20), nullable=False))
+        batch_op.add_column(sa.Column('tier', sa.String(length=20), server_default='amateur', nullable=False))
         batch_op.add_column(sa.Column('managed_venue_id', sa.Integer(), nullable=True))
         batch_op.create_foreign_key(None, 'poker_venues', ['managed_venue_id'], ['id'], ondelete='SET NULL')
 

@@ -26,7 +26,7 @@ def upgrade():
         batch_op.add_column(sa.Column('avatar_url', sa.String(length=255), nullable=True))
         batch_op.add_column(sa.Column('hendonmob_url', sa.String(length=255), nullable=True))
         batch_op.add_column(sa.Column('external_player_id', sa.String(length=80), nullable=True))
-        batch_op.add_column(sa.Column('is_verified', sa.Boolean(), nullable=False))
+        batch_op.add_column(sa.Column('is_verified', sa.Boolean(), server_default=sa.text('false'), nullable=False))
 
     # ### end Alembic commands ###
 
