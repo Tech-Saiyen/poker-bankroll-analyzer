@@ -168,10 +168,16 @@ class PokerSession(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    venue_id = db.Column(
+        db.Integer,
+        db.ForeignKey("poker_venues.id", ondelete="SET NULL"),
+        nullable=True
+    )
 
     game_type = db.Column(db.String(50), nullable=False)
     buy_in = db.Column(db.Numeric(10, 2), nullable=False)
     cash_out = db.Column(db.Numeric(10, 2), nullable=False)
+    expenses = db.Column(db.Numeric(10, 2), default=0, nullable=False)
     played_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -189,9 +195,29 @@ class PokerSession(db.Model):
     notes = db.Column(db.Text, nullable=True)
 
     user = db.relationship("User", back_populates="poker_sessions")
+    venue = db.relationship("PokerVenue")
+
+    def to_dict(self):
+        table_profit = float(self.cash_out - self.buy_in)
+        expense_val = float(self.expenses or 0)
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "venue_id": self.venue_id,
+            "venue_name": self.venue.name if self.venue else self.location,
+            "game_type": self.game_type,
+            "buy_in": float(self.buy_in),
+            "cash_out": float(self.cash_out),
+            "expenses": expense_val,
+            "net_profit": table_profit,
+            "true_net_profit": round(table_profit - expense_val, 2),
+            "played_at": self.played_at.isoformat(),
+            "created_at": self.created_at.isoformat(),
+            "stakes": self.stakes,
+            "location": self.location,
+            "duration_minutes": self.duration_minutes,
+            "notes": self.notes,
+        }
 
     def __repr__(self):
         return f"<PokerSession {self.id} User={self.user_id} {self.game_type}>"
-
-
-

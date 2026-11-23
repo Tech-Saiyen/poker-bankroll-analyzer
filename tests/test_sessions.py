@@ -256,7 +256,108 @@ def test_pagination_pages_bounds_and_owner_scoping(client):
     assert len(b_list["items"]) == 2
 
 
+def _auth_header_for(client, username, password="Password123!"):
+    client.post("/api/auth/register", json={"username": username, "password": password})
+    login_res = client.post("/api/auth/login", json={"username": username, "password": password})
+    token = login_res.get_json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
 
 
+def test_session_venue_link_and_expenses_calculation(client):
+    """Linking a session to a PokerVenue with expenses computes true_net_profit accurately."""
+    from poker_bankroll_analyzer.venue_routes import seed_dfw_venues_data
 
+    with client.application.app_context():
+        seed_dfw_venues_data()
+
+    headers_a = _auth_header_for(client, "venue_grinder_a")
+
+    # Valid venue_id=1 (Texas Card House Dallas) + $35 food/tip expenses
+    create_res = client.post(
+        "/api/poker-sessions",
+        headers=headers_a,
+        json={
+            "venue_id": 1,
+            "game_type": "NLH",
+            "stakes": "1/2",
+            "buy_in": 300,
+            "cash_out": 650,
+            "expenses": 35,
+            "duration_minutes": 300,
+        },
+    )
+    assert create_res.status_code == 201
+    data = create_res.get_json()
+    assert data["venue_id"] == 1
+    assert data["venue_name"] == "Texas Card House Dallas"
+    assert data["net_profit"] == 350.0
+    assert data["expenses"] == 35.0
+    assert data["true_net_profit"] == 315.0
+
+    # Non-existent venue_id -> 404 NOT_FOUND
+    bad_venue = client.post(
+        "/api/poker-sessions",
+        headers=headers_a,
+        json={"venue_id": 9999, "game_type": "NLH", "buy_in": 100, "cash_out": 200},
+    )
+    assert bad_venue.status_code == 404
+
+
+def test_poker_session_stats_analytics_and_user_isolation(client):
+    """GET /api/poker-sessions/stats computes hourly rate, true profit, and venue breakdown."""
+    headers_a = _auth_header_for(client, "stats_grinder_a")
+    headers_b = _auth_header_for(client, "stats_grinder_b")
+
+    # User A logs two sessions totaling 6 hours (360 mins), +$400 table profit, 40expenses->+360 true net ($60/hr)
+    client.post(
+        "/api/poker-sessions",
+        headers=headers_a,
+        json={
+            "game_type": "NLH",
+            "location": "Shuffle 214",
+            "buy_in": 200,
+            "cash_out": 500,
+            "expenses": 20,
+            "duration_minutes": 240,
+        },
+    )
+    client.post(
+        "/api/poker-sessions",
+        headers=headers_a,
+        json={
+            "game_type": "PLO",
+            "location": "Poker House Dallas",
+            "buy_in": 300,
+            "cash_out": 400,
+            "expenses": 20,
+            "duration_minutes": 120,
+        },
+    )
+
+    # User B logs a huge session that must NOT bleed into User A's stats
+    client.post(
+        "/api/poker-sessions",
+        headers=headers_b,
+        json={
+            "game_type": "NLH",
+            "location": "Shuffle 214",
+            "buy_in": 1000,
+            "cash_out": 5000,
+            "duration_minutes": 60,
+        },
+    )
+
+    stats_res = client.get("/api/poker-sessions/stats", headers=headers_a)
+    assert stats_res.status_code == 200
+    stats = stats_res.get_json()
+
+    assert stats["total_sessions"] == 2
+    assert stats["gross_table_profit"] == 400.0
+    assert stats["total_expenses"] == 40.0
+    assert stats["true_net_profit"] == 360.0
+    assert stats["total_hours"] == 6.0
+    assert stats["hourly_rate"] == 60.0
+    assert len(stats["by_venue"]) == 2
+    assert stats["by_venue"][0]["venue"] == "Shuffle 214"
+    assert stats["by_venue"][0]["true_net_profit"] == 280.0
 
