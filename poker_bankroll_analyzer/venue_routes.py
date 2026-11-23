@@ -321,9 +321,9 @@ def list_active_venue_checkins(venue_id):
 
 
 def seed_dfw_venues_data():
-    """Idempotently seeds DFW & North Texas card clubs, bar/restaurant leagues, and casinos."""
+    """Idempotently seeds DFW & North Texas card clubs, AHL/WPT bar leagues, restaurants, and casinos."""
     starter_venues = [
-        # --- DALLAS CARD CLUBS ---
+        # --- DALLAS & MID-CITIES CARD CLUBS ---
         {
             "name": "Texas Card House Dallas",
             "venue_type": "card_club",
@@ -380,7 +380,6 @@ def seed_dfw_venues_data():
                 ("NLH", "2/5", 1, 1),
             ],
         },
-        # --- FORT WORTH / MID-CITIES CARD CLUBS ---
         {
             "name": "Texas Card House Las Colinas",
             "venue_type": "card_club",
@@ -408,7 +407,55 @@ def seed_dfw_venues_data():
                 ("PLO", "1/2", 1, 1),
             ],
         },
-        # --- DFW BAR & RESTAURANT LEAGUES (WPT LEAGUE / AHL POKER) ---
+        # --- AHL & WPT LEAGUE DFW HOST BARS & RESTAURANTS ---
+        {
+            "name": "Buffalo Joe's - AHL Poker",
+            "venue_type": "bar_league",
+            "city": "Dallas",
+            "address": "3636 Frankford Rd, Dallas, TX 75287",
+            "latitude": 32.9985,
+            "longitude": -96.8431,
+            "is_featured": False,
+            "games": [
+                ("NLH", "Mon & Thu 7PM Freeroll", 4, 0),
+            ],
+        },
+        {
+            "name": "Bender's Sports & Spirits - AHL Poker",
+            "venue_type": "bar_league",
+            "city": "Richardson",
+            "address": "1919 N Plano Rd, Richardson, TX 75081",
+            "latitude": 32.9762,
+            "longitude": -96.7003,
+            "is_featured": False,
+            "games": [
+                ("NLH", "Tue & Sun 7PM Freeroll", 4, 0),
+            ],
+        },
+        {
+            "name": "The Bearded Monkey - AHL Poker",
+            "venue_type": "bar_league",
+            "city": "Forney",
+            "address": "209 E Main St, Forney, TX 75126",
+            "latitude": 32.7479,
+            "longitude": -96.4719,
+            "is_featured": False,
+            "games": [
+                ("NLH", "Thu & Sat 7PM Freeroll", 4, 0),
+            ],
+        },
+        {
+            "name": "Victory Tavern - AHL / WPT League",
+            "venue_type": "restaurant",
+            "city": "Dallas",
+            "address": "2502 N Houston St, Dallas, TX 75219",
+            "latitude": 32.7905,
+            "longitude": -96.8094,
+            "is_featured": False,
+            "games": [
+                ("NLH", "Wed 7PM Freeroll", 3, 0),
+            ],
+        },
         {
             "name": "WPT League DFW - North Dallas / Addison",
             "venue_type": "bar_league",
@@ -418,8 +465,19 @@ def seed_dfw_venues_data():
             "longitude": -96.8292,
             "is_featured": False,
             "games": [
-                ("NLH", "Freeroll", 4, 0),
-                ("NLH", "Bar League MTT", 2, 0),
+                ("NLH", "Tue & Fri 7PM Freeroll", 4, 0),
+            ],
+        },
+        {
+            "name": "WPT League DFW - Fort Worth / Hurst",
+            "venue_type": "bar_league",
+            "city": "Fort Worth",
+            "address": "Fort Worth / Mid-Cities Partner Grill, TX",
+            "latitude": 32.8235,
+            "longitude": -97.1706,
+            "is_featured": False,
+            "games": [
+                ("NLH", "Wed & Fri 7PM Freeroll", 3, 0),
             ],
         },
         {
@@ -431,7 +489,19 @@ def seed_dfw_venues_data():
             "longitude": -97.1081,
             "is_featured": False,
             "games": [
-                ("NLH", "Freeroll", 3, 0),
+                ("NLH", "Wed 7PM Freeroll", 3, 0),
+            ],
+        },
+        {
+            "name": "AHL Poker DFW - Garland / East DFW",
+            "venue_type": "bar_league",
+            "city": "Garland",
+            "address": "Garland / Firewheel Partner Bar, TX",
+            "latitude": 32.9612,
+            "longitude": -96.6152,
+            "is_featured": False,
+            "games": [
+                ("NLH", "Fri 7PM Freeroll", 3, 0),
             ],
         },
         {
@@ -443,7 +513,7 @@ def seed_dfw_venues_data():
             "longitude": -96.8012,
             "is_featured": False,
             "games": [
-                ("NLH", "Freeroll", 3, 0),
+                ("NLH", "Thu 7PM Freeroll", 3, 0),
             ],
         },
         # --- NORTH TEXAS / OKLAHOMA CASINO DESTINATIONS ---
@@ -507,3 +577,4 @@ def seed_dfw_venues_data():
 
     db.session.commit()
     return created_count
+
