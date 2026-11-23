@@ -26,21 +26,21 @@ def test_seed_and_filter_dfw_venues(client):
     """Public /api/venues returns seeded DFW venues with featured rooms first and filters."""
     with client.application.app_context():
         added = seed_dfw_venues_data()
-        assert added == 5
+        assert added == 11
         # Calling a second time must be idempotent (0 duplicates added)
         assert seed_dfw_venues_data() == 0
 
     all_res = client.get("/api/venues?lat=32.91&lng=-96.89")
     assert all_res.status_code == 200
     body = all_res.get_json()
-    assert body["total"] == 5
+    assert body["total"] == 11
     assert body["items"][0]["name"] == "Texas Card House Dallas"
     assert body["items"][0]["is_featured"] is True
     assert "distance_miles" in body["items"][0]
 
     bar_res = client.get("/api/venues?venue_type=bar_league")
     assert bar_res.status_code == 200
-    assert bar_res.get_json()["total"] == 1
+    assert bar_res.get_json()["total"] == 2
     assert bar_res.get_json()["items"][0]["venue_type"] == "bar_league"
 
 

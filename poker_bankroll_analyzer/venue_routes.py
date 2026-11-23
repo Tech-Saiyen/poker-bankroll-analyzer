@@ -321,8 +321,9 @@ def list_active_venue_checkins(venue_id):
 
 
 def seed_dfw_venues_data():
-    """Idempotently seeds starter Dallas-Fort Worth venues and sample live games."""
+    """Idempotently seeds DFW & North Texas card clubs, bar/restaurant leagues, and casinos."""
     starter_venues = [
+        # --- DALLAS CARD CLUBS ---
         {
             "name": "Texas Card House Dallas",
             "venue_type": "card_club",
@@ -331,7 +332,12 @@ def seed_dfw_venues_data():
             "latitude": 32.9096,
             "longitude": -96.8925,
             "is_featured": True,
-            "games": [("NLH", "1/2", 6, 8), ("NLH", "2/5", 3, 5), ("PLO", "1/2/5", 2, 4)],
+            "games": [
+                ("NLH", "1/2", 6, 8),
+                ("NLH", "2/5", 3, 5),
+                ("PLO", "1/2/5", 2, 4),
+                ("BIG O", "1/2", 1, 2),
+            ],
         },
         {
             "name": "Shuffle 214",
@@ -341,7 +347,11 @@ def seed_dfw_venues_data():
             "latitude": 32.8639,
             "longitude": -96.6836,
             "is_featured": False,
-            "games": [("NLH", "1/2", 4, 3), ("PLO", "1/3", 1, 2)],
+            "games": [
+                ("NLH", "1/2", 4, 3),
+                ("NLH", "2/5", 1, 2),
+                ("PLO", "1/3", 1, 2),
+            ],
         },
         {
             "name": "Poker House Dallas",
@@ -351,7 +361,11 @@ def seed_dfw_venues_data():
             "latitude": 32.9332,
             "longitude": -96.8211,
             "is_featured": False,
-            "games": [("NLH", "1/2", 5, 6), ("NLH", "2/5", 2, 3)],
+            "games": [
+                ("NLH", "1/2", 5, 6),
+                ("NLH", "2/5", 2, 3),
+                ("PLO", "1/2", 1, 1),
+            ],
         },
         {
             "name": "Champions Club Dallas",
@@ -361,17 +375,106 @@ def seed_dfw_venues_data():
             "latitude": 32.9082,
             "longitude": -96.8034,
             "is_featured": False,
-            "games": [("NLH", "1/3", 4, 2)],
+            "games": [
+                ("NLH", "1/3", 4, 2),
+                ("NLH", "2/5", 1, 1),
+            ],
+        },
+        # --- FORT WORTH / MID-CITIES CARD CLUBS ---
+        {
+            "name": "Texas Card House Las Colinas",
+            "venue_type": "card_club",
+            "city": "Irving",
+            "address": "8501 N MacArthur Blvd, Irving, TX 75063",
+            "latitude": 32.9225,
+            "longitude": -96.9597,
+            "is_featured": False,
+            "games": [
+                ("NLH", "1/2", 5, 4),
+                ("NLH", "2/5", 2, 2),
+                ("PLO", "1/2", 1, 2),
+            ],
         },
         {
-            "name": "DFW Bar Poker League - North Dallas",
+            "name": "Fort Worth Card House",
+            "venue_type": "card_club",
+            "city": "Fort Worth",
+            "address": "Fort Worth Metro Area, TX",
+            "latitude": 32.7555,
+            "longitude": -97.3308,
+            "is_featured": False,
+            "games": [
+                ("NLH", "1/2", 4, 3),
+                ("PLO", "1/2", 1, 1),
+            ],
+        },
+        # --- DFW BAR & RESTAURANT LEAGUES (WPT LEAGUE / AHL POKER) ---
+        {
+            "name": "WPT League DFW - North Dallas / Addison",
             "venue_type": "bar_league",
             "city": "Dallas",
-            "address": "Addison / North Dallas Partner Grill",
-            "latitude": 32.9618,
+            "address": "Addison / Belt Line Partner Sports Bar, Dallas, TX",
+            "latitude": 32.9537,
             "longitude": -96.8292,
             "is_featured": False,
-            "games": [("NLH", "Freeroll", 3, 0)],
+            "games": [
+                ("NLH", "Freeroll", 4, 0),
+                ("NLH", "Bar League MTT", 2, 0),
+            ],
+        },
+        {
+            "name": "AHL Poker DFW - Arlington / Mid-Cities",
+            "venue_type": "bar_league",
+            "city": "Arlington",
+            "address": "Arlington / Collins St Partner Grill, Arlington, TX",
+            "latitude": 32.7357,
+            "longitude": -97.1081,
+            "is_featured": False,
+            "games": [
+                ("NLH", "Freeroll", 3, 0),
+            ],
+        },
+        {
+            "name": "DFW Bar & Grill Poker Night - Plano / Frisco",
+            "venue_type": "restaurant",
+            "city": "Plano",
+            "address": "Legacy / Preston Partner Grill, Plano, TX",
+            "latitude": 33.0760,
+            "longitude": -96.8012,
+            "is_featured": False,
+            "games": [
+                ("NLH", "Freeroll", 3, 0),
+            ],
+        },
+        # --- NORTH TEXAS / OKLAHOMA CASINO DESTINATIONS ---
+        {
+            "name": "WinStar World Casino Poker Room",
+            "venue_type": "casino",
+            "city": "Thackerville (I-35 North)",
+            "address": "777 Casino Ave, Thackerville, OK 73459",
+            "latitude": 33.7486,
+            "longitude": -97.1397,
+            "is_featured": False,
+            "games": [
+                ("NLH", "1/2", 14, 9),
+                ("NLH", "2/5", 6, 4),
+                ("NLH", "5/10", 2, 2),
+                ("PLO", "1/3", 3, 2),
+            ],
+        },
+        {
+            "name": "Choctaw Casino Durant Poker Room",
+            "venue_type": "casino",
+            "city": "Durant (US-75 North)",
+            "address": "4216 S Hwy 69/75, Durant, OK 74701",
+            "latitude": 33.9498,
+            "longitude": -96.4094,
+            "is_featured": False,
+            "games": [
+                ("NLH", "1/2", 10, 6),
+                ("NLH", "2/5", 4, 3),
+                ("PLO", "1/2", 2, 1),
+            ],
         },
     ]
 
@@ -404,6 +507,3 @@ def seed_dfw_venues_data():
 
     db.session.commit()
     return created_count
-
-
-
