@@ -784,7 +784,7 @@
       const res = await fetch("/api/users/me", { headers: { "Authorization": `Bearer ${token}` } });
       if (!res.ok) { logout(); return; }
       currentUser = await res.json();
-      document.getElementById("user-badge").textContent = `currentUser.username({currentUser.tier.toUpperCase()})`;
+      document.getElementById("user-badge").textContent = `${currentUser.username} (${currentUser.tier.toUpperCase()})`;
       document.getElementById("auth-forms").style.display = "none";
       document.getElementById("profile-panel").style.display = "block";
       document.getElementById("bankroll-guest").style.display = "none";
