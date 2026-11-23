@@ -4,7 +4,7 @@ import jwt
 from flask import current_app, jsonify, request, g
 from werkzeug.security import generate_password_hash
 from .extensions import db
-from .models import User, VALID_USER_ROLES
+from .models import PokerVenue, User, VALID_USER_ROLES, VALID_USER_TIERS
 from .decorators import require_auth, require_role
 from .routes import poker_blueprint
 
@@ -231,7 +231,7 @@ def get_public_player_profile(user_id):
 @require_auth
 @require_role("admin")
 def admin_update_user_governance(user_id):
-    """Admin-only endpoint to assign platform roles or verify player badges."""
+    """Admin-only endpoint to assign roles, tiers, managed venues, or verified badges."""
     user = db.session.get(User, user_id)
     if not user:
         return jsonify({"code": "NOT_FOUND", "message": "User not found."}), 404
@@ -243,7 +243,7 @@ def admin_update_user_governance(user_id):
             "message": "Request body must be a valid JSON object."
         }), 400
 
-    allowed_admin_fields = {"role", "is_verified"}
+    allowed_admin_fields = {"role", "tier", "managed_venue_id", "is_verified"}
     forbidden_fields = set(data.keys()) - allowed_admin_fields
     if forbidden_fields:
         return jsonify({
@@ -259,6 +259,33 @@ def admin_update_user_governance(user_id):
                 "message": f"Role must be one of: {', '.join(sorted(VALID_USER_ROLES))}."
             }), 400
         user.role = new_role
+
+    if "tier" in data:
+        new_tier = data["tier"]
+        if new_tier not in VALID_USER_TIERS:
+            return jsonify({
+                "code": "VALIDATION_ERROR",
+                "message": f"Tier must be one of: {', '.join(sorted(VALID_USER_TIERS))}."
+            }), 400
+        user.tier = new_tier
+
+    if "managed_venue_id" in data:
+        venue_id = data["managed_venue_id"]
+        if venue_id is None:
+            user.managed_venue_id = None
+        else:
+            if not isinstance(venue_id, int) or isinstance(venue_id, bool):
+                return jsonify({
+                    "code": "VALIDATION_ERROR",
+                    "message": "managed_venue_id must be an integer or null."
+                }), 400
+            venue = db.session.get(PokerVenue, venue_id)
+            if not venue:
+                return jsonify({
+                    "code": "NOT_FOUND",
+                    "message": "Assigned poker venue not found."
+                }), 404
+            user.managed_venue_id = venue.id
 
     if "is_verified" in data:
         if not isinstance(data["is_verified"], bool):
