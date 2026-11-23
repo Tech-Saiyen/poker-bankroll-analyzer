@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0b1116" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>DFW Poker Life | Live Floor & Bankroll Hub</title>
+  <style>
+    :root {
+      --bg: #0b1116;
+      --surface: #131c24;
+      --surface-alt: #1a2631;
+      --border: #253545;
+      --gold: #f5b942;
+      --gold-soft: rgba(245, 185, 66, 0.14);
+      --green: #22c55e;
+      --green-soft: rgba(34, 197, 94, 0.14);
+      --red: #ef4444;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 84px; }
+    header {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(11, 17, 22, 0.94); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .brand { font-weight: 800; font-size: 1.05rem; letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px; }
+    .brand span { color: var(--gold); }
+    .pill-badge {
+      font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+      background: var(--gold-soft); color: var(--gold); border: 1px solid rgba(245,185,66,0.3);
+    }
+    .container { max-width: 680px; margin: 0 auto; padding: 14px; }
+    .sponsor-box {
+      background: linear-gradient(135deg, #1b2836, #131c24);
+      border: 1px solid var(--gold); border-radius: 14px; padding: 12px 14px;
+      margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .sponsor-tag { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); font-weight: 700; }
+    .sponsor-title { font-weight: 700; font-size: 0.95rem; margin-top: 2px; }
+    .sponsor-sub { font-size: 0.8rem; color: var(--muted); }
+    .btn {
+      background: var(--gold); color: #0b1116; border: none; border-radius: 10px;
+      padding: 9px 14px; font-weight: 700; font-size: 0.85rem; cursor: pointer; text-decoration: none; display: inline-block;
+    }
+    .btn-secondary {
+      background: var(--surface-alt); color: var(--text); border: 1px solid var(--border);
+    }
+    .btn-green { background: var(--green); color: #052e16; }
+    .btn-sm { padding: 6px 10px; font-size: 0.78rem; border-radius: 8px; }
+    .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 8px; }
+    .chip {
+      background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+      padding: 7px 13px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer;
+    }
+    .chip.active { background: var(--gold-soft); color: var(--gold); border-color: var(--gold); }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px; margin-bottom: 12px;
+    }
+    .card.featured { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(245, 185, 66, 0.15); }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .venue-title { font-size: 1.02rem; font-weight: 700; }
+    .venue-meta { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+    .game-row {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--surface-alt); border-radius: 10px; padding: 8px 10px; margin-top: 8px; font-size: 0.84rem;
+    }
+    .game-counts { display: flex; gap: 8px; align-items: center; }
+    .count-open { background: var(--green-soft); color: var(--green); padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.76rem; }
+    .count-wait { background: var(--gold-soft); color: var(--gold); padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.76rem; }
+    .venue-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+    .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+    .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .stat-label { font-size: 0.74rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-val { font-size: 1.25rem; font-weight: 800; margin-top: 4px; }
+    .pos { color: var(--green); }
+    .neg { color: var(--red); }
+    label { display: block; font-size: 0.78rem; color: var(--muted); margin: 10px 0 4px; font-weight: 600; }
+    input, select, textarea {
+      width: 100%; background: var(--surface-alt); border: 1px solid var(--border); color: var(--text);
+      padding: 10px 12px; border-radius: 10px; font-size: 0.9rem;
+    }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .toast {
+      position: fixed; top: 66px; left: 50%; transform: translateX(-50%);
+      background: #1e293b; border: 1px solid var(--gold); color: var(--text);
+      padding: 10px 16px; border-radius: 10px; font-size: 0.84rem; z-index: 50; display: none;
+    }
+    nav.bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
+      background: rgba(19, 28, 36, 0.97); backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr);
+      padding: 8px 4px 12px;
+    }
+    .nav-btn {
+      background: none; border: none; color: var(--muted); font-size: 0.72rem; font-weight: 600;
+      display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer;
+    }
+    .nav-btn.active { color: var(--gold); }
+    .nav-icon { font-size: 1.15rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">♠️ <span>DFW</span> POKER LIFE</div>
+    <div id="user-badge" class="pill-badge">Guest Mode</div>
+  </header>
+
+  <div id="toast" class="toast"></div>
+
+  <main class="container">
+    <!-- TOP SPONSOR BANNER SLOT -->
+    <div id="top-sponsor-slot"></div>
+
+    <!-- TAB 1: LIVE DFW FLOOR -->
+    <section id="tab-floor" class="section active">
+      <div class="filter-row" id="venue-filters">
+        <button class="chip active" data-type="">All DFW Spots</button>
+        <button class="chip" data-type="card_club">Card Clubs</button>
+        <button class="chip" data-type="bar_league">Bar Leagues</button>
+        <button class="chip" data-type="casino">Casinos</button>
+      </div>
+      <div id="venues-list"><p style="color:var(--muted)">Loading live DFW tables...</p></div>
+    </section>
+
+    <!-- TAB 2: MY POKER LIFE (BANKROLL & STATS) -->
+    <section id="tab-bankroll" class="section">
+      <div id="bankroll-guest" class="card">
+        <h3 style="margin-bottom:6px;">Track Your Poker Life</h3>
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;">
+          Sign in to log sessions, deduct food/gas/tips, and see your true hourly win rate across DFW venues.
+        </p>
+        <button class="btn" onclick="switchTab('account')">Sign In / Create Free Account</button>
+      </div>
+
+      <div id="bankroll-auth" style="display:none;">
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-label">True Net Profit</div>
+            <div id="stat-true-net" class="stat-val pos">$0.00</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Hourly Win Rate</div>
+            <div id="stat-hourly" class="stat-val">$0.00/hr</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Total Hours</div>
+            <div id="stat-hours" class="stat-val">0.0 hrs</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Expenses Deducted</div>
+            <div id="stat-expenses" class="stat-val">$0.00</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:0.98rem;margin-bottom:4px;">+ Log New Session (15 Sec)</h3>
+          <form id="session-form">
+            <label>DFW Venue (Optional Dropdown)</label>
+            <select id="sess-venue"><option value="">-- Custom / Home Game --</option></select>
+            <div class="row-2">
+              <div>
+                <label>Game Type</label>
+                <select id="sess-game">
+                  <option value="NLH">NLH</option>
+                  <option value="PLO">PLO</option>
+                  <option value="Big O">Big O</option>
+                  <option value="Tournament">Tournament</option>
+                </select>
+              </div>
+              <div>
+                <label>Stakes</label>
+                <input id="sess-stakes" placeholder="1/2, 2/5, $150 MTT" value="1/2" />
+              </div>
+            </div>
+            <div class="row-2">
+              <div>
+                <label>Buy-In ($)</label>
+                <input id="sess-buyin" type="number" step="0.01" required placeholder="300" />
+              </div>
+              <div>
+                <label>Cash-Out ($)</label>
+                <input id="sess-cashout" type="number" step="0.01" required placeholder="650" />
+              </div>
+            </div>
+            <div class="row-2">
+              <div>
+                <label>Food / Gas / Tips ($)</label>
+                <input id="sess-expenses" type="number" step="0.01" value="0" />
+              </div>
+              <div>
+                <label>Duration (Minutes)</label>
+                <input id="sess-duration" type="number" placeholder="240" />
+              </div>
+            </div>
+            <label>Notes</label>
+            <input id="sess-notes" placeholder="Key hand or table vibe..." />
+            <button type="submit" class="btn" style="width:100%;margin-top:14px;">Save Session</button>
+       </form>
+     </div>
+
+     <h3 style="font-size:0.95rem;margin:14px 0 8px;">Recent Sessions</h3>
+     <div id="sessions-list"></div>
+   </div>
+ </section>
+
+ <!-- TAB 3: DFW MAGAZINE & AFFILIATES -->
+ <section id="tab-magazine" class="section">
+   <div class="card" style="border-color:var(--gold);">
+     <span class="sponsor-tag">Featured Training Partner</span>
+     <h3 style="font-size:0.98rem;margin:4px 0;">Level Up Your DFW Win Rate</h3>
+     <p style="font-size:0.82rem;color:var(--muted);margin-bottom:10px;">
+       Study solver-backed preflop &amp; postflop spots built for Texas deep-stack games.
+     </p>
+     <a href="https://gtowizard.com" target="_blank" rel="noopener" class="btn btn-sm">Explore Poker Training →</a>
+   </div>
+   <div id="articles-list"><p style="color:var(--muted)">Loading North Dallas spotlights...</p></div>
+ </section>
+
+ <!-- TAB 4: ACCOUNT, PROFILE CARD & FLOOR MANAGER PORTAL -->
+ <section id="tab-account" class="section">
+   <div id="auth-forms" class="card">
+     <h3 style="margin-bottom:8px;">Player &amp; Floor Manager Sign In</h3>
+     <form id="login-form">
+       <label>Username</label>
+       <input id="auth-user" required placeholder="e.g. dallas_grinder" />
+       <label>Password</label>
+       <input id="auth-pass" type="password" required placeholder="Minimum 8 characters" />
+       <div class="row-2" style="margin-top:14px;">
+         <button type="submit" class="btn">Log In</button>
+         <button type="button" class="btn btn-secondary" onclick="registerAccount()">Register Free</button>
+       </div>
+     </form>
+   </div>
+
+   <div id="profile-panel" style="display:none;">
+     <div class="card">
+       <div class="card-header">
+         <div>
+           <h3 id="prof-title">Player Profile</h3>
+           <p id="prof-meta" class="venue-meta"></p>
+         </div>
+         <button class="btn btn-secondary btn-sm" onclick="logout()">Log Out</button>
+       </div>
+       <form id="profile-form">
+         <label>Display Name / Poker Alias</label>
+         <input id="prof-display" placeholder="North Dallas Crusher" />
+         <label>Home DFW Room</label>
+         <input id="prof-homeroom" placeholder="Texas Card House Dallas" />
+         <label>Playing Style Tags</label>
+         <input id="prof-tags" placeholder="TAG, PLO Specialist, MTT Grinder" />
+         <label>Hendon Mob Profile URL (Optional)</label>
+         <input id="prof-hendon" placeholder="https://pokerdb.thehendonmob.com/..." />
+         <label>Bio</label>
+         <textarea id="prof-bio" rows="2" placeholder="Grinding 1/2 and 2/5 around DFW..."></textarea>
+         <button type="submit" class="btn" style="width:100%;margin-top:12px;">Update Profile Card</button>
+       </form>
+     </div>
+
+     <div id="floor-manager-panel" class="card featured" style="display:none;">
+       <span class="sponsor-tag">Floor Manager Portal</span>
+       <h3 style="margin:4px 0 8px;">10-Second Live Floor &amp; Stream Updater</h3>
+       <form id="floor-form">
+         <label>Venue ID</label>
+         <input id="fm-venue-id" type="number" required />
+         <div class="row-2">
+           <div>
+             <label>Game Type</label>
+             <select id="fm-game">
+               <option value="NLH">NLH</option>
+               <option value="PLO">PLO</option>
+               <option value="Big O">Big O</option>
+             </select>
+           </div>
+           <div>
+             <label>Stakes</label>
+             <input id="fm-stakes" value="1/2" required />
+           </div>
+         </div>
+         <div class="row-2">
+           <div>
+             <label>Open Tables</label>
+             <input id="fm-tables" type="number" min="0" value="4" required />
+           </div>
+           <div>
+             <label>Waitlist Count</label>
+             <input id="fm-waitlist" type="number" min="0" value="3" required />
+           </div>
+         </div>
+         <button type="submit" class="btn btn-green" style="width:100%;margin-top:12px;">Publish Live Table Count</button>
+       </form>
+     </div>
+   </div>
+ </section>
+</main>
+
+<nav class="bottom-nav">
+ <button class="nav-btn active" id="nav-floor" onclick="switchTab('floor')"><span class="nav-icon">🎲</span>Live Floor</button>
+ <button class="nav-btn" id="nav-bankroll" onclick="switchTab('bankroll')"><span class="nav-icon">📈</span>My Poker Life</button>
+ <button class="nav-btn" id="nav-magazine" onclick="switchTab('magazine')"><span class="nav-icon">📰</span>Magazine</button>
+ <button class="nav-btn" id="nav-account" onclick="switchTab('account')"><span class="nav-icon">👤</span>Account</button>
+</nav>
+
+<script>
+ let token = localStorage.getItem("dfw_poker_token") || "";
+ let currentUser = null;
+ let activeVenueType = "";
+
+ function showToast(msg) {
+   const el = document.getElementById("toast");
+   el.textContent = msg;
+   el.style.display = "block";
+   setTimeout(() => { el.style.display = "none"; }, 3000);
+ }
+
+ function switchTab(tab) {
+   document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+   document.getElementById("tab-" + tab).classList.add("active");
+   document.getElementById("nav-" + tab).classList.add("active");
+   if (tab === "bankroll" && token) loadBankroll();
+   if (tab === "magazine") loadArticles();
+ }
+     async function loadSponsors() {
+      const res = await fetch("/api/sponsors?placement=top_banner");
+      const data = await res.json();
+      const slot = document.getElementById("top-sponsor-slot");
+      if (data.items && data.items.length > 0) {
+        const b = data.items[0];
+        slot.innerHTML = `
+          <div class="sponsor-box">
+            <div>
+              <div class="sponsor-tag">DFW Founding Sponsor</div>
+              <div class="sponsor-title">${b.sponsor_name}</div>
+              <div class="sponsor-sub">${b.tagline || "Official DFW Poker Partner"}</div>
+            </div>
+            <a href="${b.target_url}" target="_blank" rel="noopener" class="btn btn-sm">Visit</a>
+          </div>`;
+      } else {
+        slot.innerHTML = `
+          <div class="sponsor-box">
+            <div>
+              <div class="sponsor-tag">Founding Sponsor Slot Open</div>
+              <div class="sponsor-title">Reach DFW Poker Players Daily</div>
+              <div class="sponsor-sub">Feature your DFW grill, card club, or brand here.</div>
+            </div>
+            <button class="btn btn-sm" onclick="switchTab('account')">Partner</button>
+          </div>`;
+      }
+    }
+
+    async function loadVenues() {
+      const url = activeVenueType ? `/api/venues?venue_type=${activeVenueType}` : "/api/venues";
+      const res = await fetch(url);
+      const data = await res.json();
+      const list = document.getElementById("venues-list");
+      const select = document.getElementById("sess-venue");
+      select.innerHTML = '<option value="">-- Custom / Home Game --</option>';
+
+      if (!data.items || data.items.length === 0) {
+        list.innerHTML = '<div class="card"><p style="color:var(--muted)">No venues found for this filter yet.</p></div>';
+        return;
+      }
+
+      list.innerHTML = data.items.map(v => {
+        select.innerHTML += `<option value="v.id">{v.name} (${v.city})</option>`;
+        const gamesHtml = (v.live_games || []).map(g => `
+          <div class="game-row">
+            <strong>${g.stakes} ${g.game_type}</strong>
+            <div class="game-counts">
+              <span class="count-open">${g.open_tables} Open</span>
+              <span class="count-wait">${g.waitlist_count} Wait</span>
+            </div>
+          </div>`).join("");
+        const streamBtn = v.stream_url
+          ? `<a href="${v.stream_url}" target="_blank" rel="noopener" class="btn btn-sm">📺 Watch Stream</a>`
+          : "";
+        return `
+          <div class="card ${v.is_featured ? "featured" : ""}">
+            <div class="card-header">
+              <div>
+                <div class="venue-title">${v.name} ${v.is_featured ? '<span class="pill-badge">FEATURED</span>' : ""}</div>
+                <div class="venue-meta">${v.city} • ${v.venue_type.replace("_", " ").toUpperCase()}</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="checkInVenue(${v.id})">📍 Check In</button>
+            </div>
+            ${gamesHtml || '<p class="venue-meta" style="margin-top:8px;">No active games posted yet.</p>'}
+            <div class="venue-actions">
+              ${streamBtn}
+              <span id="checkin-count-${v.id}" class="venue-meta"></span>
+            </div>
+          </div>`;
+      }).join("");
+
+      data.items.forEach(v => loadCheckInCount(v.id));
+    }
+
+    async function loadCheckInCount(venueId) {
+      const res = await fetch(`/api/venues/${venueId}/check-ins`);
+      if (res.ok) {
+        const d = await res.json();
+        const el = document.getElementById(`checkin-count-${venueId}`);
+        if (el) el.textContent = d.active_count > 0 ? `🔥 ${d.active_count} player(s) checked in now` : "";
+      }
+    }
+
+    async function checkInVenue(venueId) {
+      if (!token) {
+        showToast("Sign in first to check into a DFW room!");
+        switchTab("account");
+        return;
+      }
+      const res = await fetch(`/api/venues/${venueId}/check-in`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToast("Checked in for 6 hours!");
+        loadCheckInCount(venueId);
+      }
+    }
+
+    async function loadArticles() {
+      const res = await fetch("/api/articles");
+      const data = await res.json();
+      const box = document.getElementById("articles-list");
+      if (!data.items || data.items.length === 0) {
+        box.innerHTML = '<div class="card"><h3>North Dallas Player Spotlights</h3><p class="venue-meta" style="margin-top:6px;">First local DFW grinder spotlights dropping soon!</p></div>';
+        return;
+      }
+      box.innerHTML = data.items.map(a => `
+        <div class="card">
+          <span class="sponsor-tag">${a.category.toUpperCase()}</span>
+          <h3 style="margin:4px 0 6px;">${a.title}</h3>
+          <p style="font-size:0.86rem;color:var(--muted);line-height:1.45;">${a.summary || a.body.slice(0, 160) + "..."}</p>
+          ${a.affiliate_url ? `<a href="${a.affiliate_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="margin-top:10px;">Study Link →</a>` : ""}
+        </div>`).join("");
+    }
+
+    async function loadBankroll() {
+      if (!token) return;
+      const [statsRes, listRes] = await Promise.all([
+        fetch("/api/poker-sessions/stats", { headers: { "Authorization": `Bearer ${token}` } }),
+        fetch("/api/poker-sessions?per_page=10", { headers: { "Authorization": `Bearer ${token}` } })
+      ]);
+      if (statsRes.ok) {
+        const s = await statsRes.json();
+        const netEl = document.getElementById("stat-true-net");
+        netEl.textContent = `$${s.true_net_profit.toFixed(2)}`;
+        netEl.className = "stat-val " + (s.true_net_profit >= 0 ? "pos" : "neg");
+        document.getElementById("stat-hourly").textContent = `$${s.hourly_rate.toFixed(2)}/hr`;
+        document.getElementById("stat-hours").textContent = `${s.total_hours} hrs`;
+        document.getElementById("stat-expenses").textContent = `$${s.total_expenses.toFixed(2)}`;
+      }
+      if (listRes.ok) {
+        const l = await listRes.json();
+        const box = document.getElementById("sessions-list");
+        box.innerHTML = (l.items || []).slice().reverse().map(item => `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <strong>${item.stakes || ""} ${item.game_type}</strong>
+                <div class="venue-meta">${item.venue_name || "DFW Session"} • Expenses: $${item.expenses.toFixed(2)}</div>
+              </div>
+              <strong class="${item.true_net_profit >= 0 ? "pos" : "neg"}">
+                item.truenetprofit>=0?"+":""${item.true_net_profit.toFixed(2)}
+              </strong>
+            </div>
+          </div>`).join("") || '<p class="venue-meta">No sessions logged yet.</p>';
+      }
+    }
+
+    async function refreshProfile() {
+      if (!token) {
+        document.getElementById("user-badge").textContent = "Guest Mode";
+        document.getElementById("auth-forms").style.display = "block";
+        document.getElementById("profile-panel").style.display = "none";
+        document.getElementById("bankroll-guest").style.display = "block";
+        document.getElementById("bankroll-auth").style.display = "none";
+        return;
+      }
+      const res = await fetch("/api/users/me", { headers: { "Authorization": `Bearer ${token}` } });
+      if (!res.ok) { logout(); return; }
+      currentUser = await res.json();
+      document.getElementById("user-badge").textContent = `currentUser.username({currentUser.tier.toUpperCase()})`;
+      document.getElementById("auth-forms").style.display = "none";
+      document.getElementById("profile-panel").style.display = "block";
+      document.getElementById("bankroll-guest").style.display = "none";
+      document.getElementById("bankroll-auth").style.display = "block";
+
+      document.getElementById("prof-title").textContent = (currentUser.display_name || currentUser.username) + (currentUser.is_verified ? " ✅" : "");
+      document.getElementById("prof-meta").textContent = `Role: ${currentUser.role} • Tier: ${currentUser.tier}`;
+      document.getElementById("prof-display").value = currentUser.display_name || "";
+      document.getElementById("prof-homeroom").value = currentUser.home_room || "";
+      document.getElementById("prof-tags").value = currentUser.style_tags || "";
+      document.getElementById("prof-hendon").value = currentUser.hendonmob_url || "";
+      document.getElementById("prof-bio").value = currentUser.bio || "";
+
+      if (currentUser.role === "room_manager" || currentUser.role === "admin") {
+        document.getElementById("floor-manager-panel").style.display = "block";
+        if (currentUser.managed_venue_id) document.getElementById("fm-venue-id").value = currentUser.managed_venue_id;
+      }
+    }
+
+    async function registerAccount() {
+      const username = document.getElementById("auth-user").value.trim();
+      const password = document.getElementById("auth-pass").value;
+      const res = await fetch("/api/auth/register", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.message || "Registration failed"); return; }
+      showToast("Account created! Logging in...");
+      await loginWith(username, password);
+    }
+
+    async function loginWith(username, password) {
+      const res = await fetch("/api/auth/login", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.message || "Login failed"); return; }
+      token = data.access_token;
+      localStorage.setItem("dfw_poker_token", token);
+      await refreshProfile();

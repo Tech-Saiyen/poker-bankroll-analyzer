@@ -9,6 +9,7 @@ from .extensions import db, migrate
 from .routes import poker_blueprint
 from .venue_routes import venue_blueprint, seed_dfw_venues_data
 from .editorial_routes import editorial_blueprint
+from .web_routes import web_blueprint
 from .config import config_by_name
 from . import models
 
@@ -21,6 +22,7 @@ def create_app(config_name="development"):
     db.init_app(app)
     migrate.init_app(app, db)
 
+    app.register_blueprint(web_blueprint)
     app.register_blueprint(poker_blueprint, url_prefix="/api")
     app.register_blueprint(venue_blueprint, url_prefix="/api")
     app.register_blueprint(editorial_blueprint, url_prefix="/api")
