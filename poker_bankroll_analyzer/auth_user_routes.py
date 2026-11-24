@@ -25,7 +25,7 @@ def register_user():
         }), 400
 
    # Strips all accidental leading/trailing spaces before checking the length
-    username = username.strip()
+    username = username.strip().lower()
     if len(username) < 3 or len(username) > 30:
         return jsonify({
             "code": "VALIDATION_ERROR",
@@ -46,7 +46,7 @@ def register_user():
         }), 400
 
    # --- BOUNCER CHECK 3: Check For Duplicate Username ---
-    existing_user = User.query.filter_by(username=username).first()
+    existing_user = User.query.filter(db.func.lower(User.username) == username).first()
     if existing_user:
         return jsonify({
             "code": "VALIDATION_ERROR",
@@ -84,7 +84,7 @@ def login_user():
         }), 400
 
    # Search for the user records by their unique nickname
-    user = User.query.filter_by(username=username.strip()).first()
+    user = User.query.filter(db.func.lower(User.username) == username.strip().lower()).first()
    # If the user doesn't exist, or the password check fails -> Denied
     if not user or not user.check_password(password):
         return jsonify({

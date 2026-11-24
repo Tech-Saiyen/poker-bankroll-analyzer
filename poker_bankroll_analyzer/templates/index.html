@@ -513,7 +513,7 @@
         <h3 style="margin-bottom:8px;">Player &amp; Floor Manager Sign In</h3>
         <form id="login-form">
           <label>Username</label>
-          <input id="auth-user" required placeholder="e.g. dallas_grinder" />
+          <input id="auth-user" autocapitalize="none" autocorrect="off" required placeholder="e.g. dallas_grinder" />
           <label>Password</label>
           <div style="display:flex;gap:6px;">
             <input id="auth-pass" type="password" required placeholder="Minimum 8 characters" />
@@ -863,21 +863,18 @@
 
       const displayName = currentUser.display_name || currentUser.username;
       const verifiedIcon = currentUser.is_verified ? " ✅" : "";
-      if (document.getElementById("pc-tier")) {
-        document.getElementById("pc-tier").textContent = currentUser.tier.toUpperCase() + (currentUser.is_verified ? " • VERIFIED" : "");
-        document.getElementById("pc-style").textContent = currentUser.style_tags || "DFW Grinder";
-        document.getElementById("pc-name").textContent = displayName + verifiedIcon;
-        document.getElementById("pc-room").textContent = "🏠 " + (currentUser.home_room || "Texas Poker Circuit");
-        document.getElementById("pc-bio").textContent = currentUser.bio || "";
-        document.getElementById("pc-hourly").textContent = "$" + Number(stats.hourly_rate || 0).toFixed(2) + "/hr";
-        document.getElementById("pc-hours").textContent = Number(stats.total_hours || 0).toFixed(1) + "h";
-        document.getElementById("pc-sessions").textContent = String(stats.total_sessions || 0);
-      }
-      const hmEl = document.getElementById("pc-hendon");
-      if (hmEl) {
-        if (currentUser.hendonmob_url) { hmEl.href = currentUser.hendonmob_url; hmEl.style.display = "inline-block"; }
-        else { hmEl.style.display = "none"; }
-      }
+      document.getElementById("card-name").textContent = displayName + verifiedIcon;
+      document.getElementById("card-room").textContent = "🏠 " + (currentUser.home_room || "Home Room: Unassigned");
+      document.getElementById("card-tier-crest").textContent = currentUser.tier.toUpperCase() + (currentUser.is_verified ? " • VERIFIED" : "");
+      document.getElementById("card-style-badge").textContent = currentUser.style_tags || "TAG (Tight-Aggressive)";
+      document.getElementById("card-role-badge").textContent = currentUser.role.replace("_", " ").toUpperCase();
+      document.getElementById("card-hourly").textContent = "$" + Number(stats.hourly_rate || 0).toFixed(2) + "/hr";
+      document.getElementById("card-hours").textContent = Number(stats.total_hours || 0).toFixed(1) + " hrs";
+      document.getElementById("card-bio").textContent = currentUser.bio || "";
+      const hmWrap = document.getElementById("card-hendon-wrap");
+      hmWrap.innerHTML = currentUser.hendonmob_url
+        ? `<a href="${currentUser.hendonmob_url}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🏆 View Hendon Mob Profile →</a>`
+        : "";
 
       document.getElementById("prof-display").value = currentUser.display_name || "";
       const homeEl = document.getElementById("prof-homeroom");
@@ -899,7 +896,7 @@
       }
     }
 
-    function togglePw(id) {
+    function togglePass(id) {
       const el = document.getElementById(id);
       if (el) el.type = el.type === "password" ? "text" : "password";
     }

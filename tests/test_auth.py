@@ -314,6 +314,17 @@ def test_admin_can_assign_room_manager_and_verify_player(client):
     assert body["role"] == "room_manager"
     assert body["is_verified"] is True
 
+def test_case_insensitive_username_login_and_duplicate_block(client):
+    """Usernames are case-insensitive on login and prevent case-variant duplicates."""
+    res1 = client.post("/api/auth/register", json={"username": "DallasPro", "password": "StrongPassword123!"})
+    assert res1.status_code == 201
+    assert res1.get_json()["username"] == "dallaspro"
+
+    dup = client.post("/api/auth/register", json={"username": "DALLASPRO", "password": "StrongPassword123!"})
+    assert dup.status_code == 409
+
+    login = client.post("/api/auth/login", json={"username": "DallasPro", "password": "StrongPassword123!"})
+    assert login.status_code == 200
 
 
 
